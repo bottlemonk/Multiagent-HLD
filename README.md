@@ -1,124 +1,182 @@
-Power Apps Code Reviewer and HLD Generator
-This project analyzes Microsoft Power Apps code files (JSON or YAML format) and generates structured summaries of individual files, which are then used to create a comprehensive High-Level Design (HLD) document for the entire application.
+Power Apps Code Analyzer
+A Python-based tool that automatically analyzes Microsoft Power Apps code files and generates comprehensive High-Level Design (HLD) documentation using Large Language Models and LangGraph workflow orchestration.
+🚀 Features
 
-🧠 Overview
-The solution uses a multi-stage pipeline built using langgraph, langchain, and an LLM backend (e.g., LM Studio) to:
+Automated Code Analysis: Scans Power Apps source files (.fx.yaml and .json formats)
+Intelligent File Processing: Handles both modern Power Apps (.fx.yaml) and legacy formats (.json)
+LLM-Powered Summaries: Generates detailed summaries for each code file
+High-Level Design Generation: Synthesizes individual file summaries into comprehensive HLD documentation
+Workflow Orchestration: Uses LangGraph for robust, visual workflow management
+Error Handling: Graceful handling of file encoding issues and processing errors
 
-Read Power App source files from a directory.
-Generate per-file summaries highlighting key features like screens, components, data sources, logic, and navigation.
-Aggregate all summaries into a single HLD document that describes the overall architecture, data model, user flow, and business rules.
-This tool is ideal for documenting or reverse-engineering Power Apps applications programmatically.
+📋 Prerequisites
+
+Python 3.8+
+Local LM Studio instance running on http://192.168.0.110:1234/v1
+Power Apps source code in a src/ directory
+
+🛠️ Installation
+
+Clone this repository:
+
+bashgit clone <repository-url>
+cd powerapp-analyzer
+
+Install required dependencies:
+
+bashpip install langgraph langchain openai ipython
+
+Ensure your LM Studio is running with the Qwen 3-4B model at the specified endpoint.
 
 📁 Project Structure
-
-
-1
-2
-3
-4
-5
-6
 project-root/
-├── src/                    # Folder containing Power App JSON/YAML files
-│   ├── controls/             # Optional: Folder for JSON screen/component files
-│   └── *.fx.yaml             # Optional: YAML configuration files
-├── Pasted_Text_1751811826366.txt  # Original script (renamed as needed)
-└── README.md                 # This file
-🛠️ Dependencies
-Ensure you have the following installed before running this script:
-
-Python 3.9+
-Required libraries:
-langgraph
-langchain
-IPython (for image display)
-pyyaml (if handling YAML files)
-A compatible LLM backend (e.g., LM Studio ) serving a model like Qwen at http://192.168.0.110:1234/v1.
-Install dependencies via:
-
-bash
-
-
-1
-pip install langgraph langchain ipython pyyaml openai
-Note: The OpenAI package is used here due to compatibility with ChatOpenAI, even though it connects to a local server. 
-
-⚙️ Configuration
-Update the following in the script if needed:
-
-python
-
-
-1
-2
-3
-4
-5
-6
-llm = ChatOpenAI(
-    openai_api_base="http://localhost:1234/v1",  # Your local LLM server
-    openai_api_key="lmstudio",
-    model="qwen/qwen3-4b",  # Model name
-    temperature=0.1
+├── src/                    # Power Apps source files
+│   ├── *.fx.yaml          # Modern Power Apps files (preferred)
+│   └── controls/          # Legacy JSON files location
+│       └── *.json
+├── analyzer.py            # Main analysis script
+└── README.md
+🔧 Configuration
+LLM Configuration
+The tool is configured to use a local LM Studio instance. Update the following parameters in the code if needed:
+pythonllm = ChatOpenAI(
+    openai_api_base="http://192.168.0.110:1234/v1",  # Your LM Studio URL
+    openai_api_key="lmstudio",                       # API key (if required)
+    model="qwen/qwen3-4b",                          # Model name
+    temperature=0.1                                  # Temperature setting
 )
-Place your Power Apps files under the src/ directory. The script will prioritize .fx.yaml files first; otherwise, it will read .json files from the controls/ folder.
+File Processing Priority
 
-🚀 How to Run
-Place your Power Apps JSON or YAML files in the src/ folder.
-Run the script:
-bash
+Primary: .fx.yaml files (modern Power Apps format)
+Fallback: .json files in controls/ folder (legacy format)
 
+🚀 Usage
 
-1
-python app_reviewer.py
-The output will be printed to the console, including:
-File summaries
-Final HLD document
-Optionally, uncomment the file-saving block to write the final HLD to a Markdown file. 
+Place your Power Apps source files in the src/ directory
+Run the analyzer:
 
-📊 Output Example
-Per-File Summary
+bashpython analyzer.py
 
+The tool will:
 
-1
-2
-3
-4
-5
-6
-- **File Name:** DetailScreen.json
-- **Screen:** DetailScreen (type: Screen) – displays a single customer record.
-- **Data sources:** Customers (SharePoint list).
-- **Variables:** varSelectedCustomer (stores selected customer ID).
-- **Key logic:** OnVisible loads selected customer; OnSelect for Save button triggers patch to Customers.
-- **Navigation:** On back button, navigates to HomeScreen.
-High-Level Design Document Snippet
+Scan and read all relevant files
+Generate individual file summaries
+Create a comprehensive HLD document
+Display the workflow graph
+Print the final HLD document
 
 
-1
-2
-3
-4
-5
-6
-7
-8
-9
-10
-# High-Level Design Document
 
-## Executive Summary
-This Power App serves as a customer management system allowing users to view, edit, and submit customer records...
+📊 Workflow Overview
+The analysis follows a three-stage LangGraph workflow:
+mermaidgraph LR
+    A[Read Files] --> B[File Analysis]
+    B --> C[HLD Generation]
+Stage 1: File Reading (read_files)
 
-## Application Architecture Overview
-The app consists of the following main screens:
-- HomeScreen – lists all customers
-- DetailScreen – shows and edits customer details
-...
-📌 Future Enhancements
-Add support for additional file formats (e.g., XML, CSV).
-Integrate with UML generation tools to produce diagrams automatically.
-Store results in a database or export to PDF/Word.
-Add command-line arguments for input/output paths.
-✅ License
-MIT License – see LICENSE for details.
+Scans the src/ directory for Power Apps files
+Prioritizes .fx.yaml files over .json files
+Handles encoding issues gracefully
+Collects file metadata and content
+
+Stage 2: File Analysis (node_1)
+
+Analyzes each file individually using LLM
+Extracts key information:
+
+Screens, components, and entities
+Data sources and variables
+Navigation logic and user interactions
+Business rules and special processing
+
+
+
+Stage 3: HLD Generation (node_2)
+
+Synthesizes individual file summaries
+Generates comprehensive documentation including:
+
+Executive Summary
+Application Architecture Overview
+Data Model
+Navigation and User Flow
+Custom Logic and Key Interactions
+Integration Points
+Special Features and Business Rules
+
+
+
+📄 Output Format
+The tool generates a detailed High-Level Design document containing:
+
+Executive Summary: Business context and purpose
+Architecture Overview: Key modules and their relationships
+Data Model: Entities, data sources, and relationships
+Navigation Flow: User journeys and screen transitions
+Custom Logic: Important formulas and business rules
+Integration Points: External service connections
+Component Summary: Screen and component responsibilities
+
+🔧 Customization
+Modifying Analysis Prompts
+Edit the node1_prompt and system_prompt_hld variables to customize the analysis focus or output format.
+Adding New File Types
+Extend the read_files function to support additional file formats:
+pythonif file.endswith('.your_extension'):
+    # Add processing logic
+Changing Output Format
+Modify the node_2 function to save output in different formats (PDF, HTML, etc.).
+🐛 Troubleshooting
+Common Issues
+
+LM Studio Connection Failed
+
+Ensure LM Studio is running on the specified URL
+Check firewall settings
+Verify the model is loaded
+
+
+No Files Found
+
+Verify Power Apps files are in the src/ directory
+Check file extensions (.fx.yaml or .json)
+Ensure proper directory structure
+
+
+Encoding Errors
+
+The tool handles common encoding issues automatically
+Check file integrity if problems persist
+
+
+Memory Issues
+
+Large applications may require more memory
+Consider processing files in smaller batches
+
+
+
+📈 Performance Tips
+
+File Organization: Keep related files in logical subdirectories
+Model Selection: Use appropriate model size for your hardware
+Batch Processing: For large applications, consider processing subsets of files
+
+🤝 Contributing
+
+Fork the repository
+Create a feature branch
+Make your changes
+Add tests if applicable
+Submit a pull request
+
+📝 License
+This project is licensed under the MIT License - see the LICENSE file for details.
+🙏 Acknowledgments
+
+Built with LangGraph for workflow orchestration
+Uses LangChain for LLM integration
+Powered by LM Studio for local LLM execution
+
+📞 Support
+For issues, questions, or contributions, please open an issue in the repository or contact the maintainers.
